@@ -89,8 +89,8 @@ WARCON_BASE_URL=http://warcon:3000
 ### One-time VPS setup
 
 ```sh
-git clone <repo> /srv/wardogs-bots
-cd /srv/wardogs-bots
+git clone https://github.com/SamMcAulay/WDstats.git ~/wardogs-bots
+cd ~/wardogs-bots
 cp .env.example .env    # then fill it in — this file is never committed
 ```
 

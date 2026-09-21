@@ -24,9 +24,34 @@ Design: `docs/superpowers/specs/2026-09-21-wardogs-discord-bots-design.md`
 npm install
 cp .env.example .env    # then fill in .env
 npm test
+npm run preflight       # verify credentials without touching Discord
 npm run build
 npm start
 ```
+
+## Preflight — check your credentials before going live
+
+```bash
+npm run preflight
+```
+
+Validates everything without connecting to the Discord gateway and without
+writing anything to Discord. Safe to run against production tokens. It:
+
+- checks each `BOT{i}_TOKEN` with a read-only `GET /users/@me`
+- fetches every server's summary, naming a Cloudflare bounce and a Warcon
+  rejection as separate failures
+- prints the raw payload fields (`maxPlayers`, `reservedSlots`, `alternator`,
+  `gameServerId`, `startedAt`) beside the values derived from them
+- prints exactly what each bot would display, with every field measured
+  against its Discord limit, including Bot 1's full six-tick rotation
+
+Exits non-zero if any check fails, so it also works as a deploy gate.
+
+Read the output for two things in particular: a `gameServerId` reported as
+empty means that bot needs `BOT{i}_JOIN_CODE` set, and the `alternator` line
+shows the raw string beside the label `zoneLabel` produces from it — if the
+label looks wrong, that function needs adjusting for the real format.
 
 ## Configuration
 

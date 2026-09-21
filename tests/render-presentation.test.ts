@@ -14,7 +14,7 @@ function status(overrides: Partial<WarconStatus> = {}): WarconStatus {
     scoreCap: null,
     matchSeconds: null,
     playerCount: 99,
-    maxPlayers: 98,
+    maxPlayers: 100,
     scores: [
       { name: 'Manticore', colorHex: '#4caf50', score: 33 },
       { name: 'Valkyra', colorHex: '#f44336', score: 26 },

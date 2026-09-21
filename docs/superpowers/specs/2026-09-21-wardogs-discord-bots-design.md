@@ -81,8 +81,8 @@ From `LiveView` / `Status` / `Player` (Warcon's `src/lib/types.ts`):
 | `gameServerId` | join code — first line of every bio |
 | `status.serverName` | nickname source (via template) |
 | `status.playerCount` | slots numerator |
-| `status.maxPlayers` | public slot cap |
-| `reservedSlots` | slots held back for reserved players, **on top of** `status.maxPlayers` |
+| `status.maxPlayers` | total slot cap (reserved slots included) |
+| `reservedSlots` | slots held back for reserved players, **inside** `status.maxPlayers` |
 | `status.scores[]` | `{name, colorHex, score}` — Manticore / Valkyra / Lonestar |
 | `status.map`, `.lighting`, `.experiences[]`, `.alternator` | context line (raw ids) |
 | `players[]` | `{name, faction, kills, deaths, cash, ping}` — top-5 board |
@@ -208,11 +208,13 @@ About Me:  Join code: 7f3a9c21-4e88-4b1a-9d02-6c5e1f0a8b77
 
 ### 5.3 Formatting rules
 
-- **Slots:** `players / (maxPlayers + reservedSlots)`; suffix `+N reserved online` where
-  `N = max(0, players − maxPlayers)`. Justified by `types.ts`, which documents
-  `reservedSlots` as *"player slots held back from public joins for reserved players, on
-  top of `status.maxPlayers`"* — giving `98 + 2 = 100`. The suffix is omitted when `N == 0`, so a
-  quiet server reads plainly `40 / 100` and the suffix appears only when it is meaningful.
+- **Slots:** `players / maxPlayers`; suffix `+N reserved online` where
+  `N = max(0, players − (maxPlayers − reservedSlots))`. `maxPlayers` is the **total**
+  cap and reserved slots sit **inside** it, confirmed against the live builds, where
+  `maxPlayers` reads 100 whether or not slots are reserved. So 100 total with 2 reserved
+  gives a public cap of 98, and the 99th player reads `99 / 100 +1 reserved online`. The
+  suffix is omitted when `N == 0`, so a quiet server reads plainly `40 / 100` and the
+  suffix appears only when it is meaningful.
 - **Bars:** 10 characters wide, `▰` filled and `▱` empty, `round(score / maxScore * 10)`.
   Scaling to the leader (not to `scoreCap`, which live builds omit) keeps the ratio
   readable and always fills the leading faction.
@@ -294,7 +296,9 @@ from any one server settles all three — obtainable by opening
 `https://<panel>/api/servers/<id>/summary` in a logged-in browser tab, since session
 cookies are honoured on `/api/*`.
 
-1. `status.maxPlayers` is the public cap on the live builds in use.
+1. ~~`status.maxPlayers` is the public cap on the live builds in use.~~ **Settled
+   2026-09-21: it is the total cap, reserved slots included — always 100 regardless of
+   `reservedSlots`. `formatSlots` derives the public cap by subtraction.**
 2. The literal `alternator` string format, which feeds `zoneLabel`.
 3. Whether `startedAt` and `gameServerId` are populated — both depend on build version
    and optional routes (`GET /v1/health`, `GET /v1/server-id`, the latter new in

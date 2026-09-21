@@ -38,7 +38,7 @@ export interface WarconLive {
   /** join code from GET /v1/server-id; '' when the build does not serve it */
   gameServerId: string;
   startedAt: string | null;
-  /** MaxReservedSlots — held back ON TOP OF status.maxPlayers */
+  /** MaxReservedSlots — held back INSIDE status.maxPlayers, not on top of it */
   reservedSlots: number | null;
   throttledUntil: string | null;
   status: WarconStatus | null;

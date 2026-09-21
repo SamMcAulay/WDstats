@@ -4,10 +4,10 @@ import type { WarconPlayer, WarconStatus } from '../src/types.js';
 
 describe('formatSlots', () => {
   it('adds reserved slots on top of the public cap', () => {
-    expect(formatSlots(99, 98, 2)).toBe('99 / 100 +1 reserved online');
+    expect(formatSlots(99, 100, 2)).toBe('99 / 100 +1 reserved online');
   });
   it('hides the suffix when nobody is in an overflow slot', () => {
-    expect(formatSlots(40, 98, 2)).toBe('40 / 100');
+    expect(formatSlots(40, 100, 2)).toBe('40 / 100');
   });
   it('handles a server with no reserved slots', () => {
     expect(formatSlots(40, 100, 0)).toBe('40 / 100');
@@ -16,10 +16,13 @@ describe('formatSlots', () => {
     expect(formatSlots(40, 100, null)).toBe('40 / 100');
   });
   it('handles an empty server', () => {
-    expect(formatSlots(0, 98, 2)).toBe('0 / 100');
+    expect(formatSlots(0, 100, 2)).toBe('0 / 100');
   });
   it('handles a full server with every reserved slot taken', () => {
-    expect(formatSlots(100, 98, 2)).toBe('100 / 100 +2 reserved online');
+    expect(formatSlots(100, 100, 2)).toBe('100 / 100 +2 reserved online');
+  });
+  it('clamps when reserved slots exceed the cap', () => {
+    expect(formatSlots(3, 2, 5)).toBe('3 / 2 +3 reserved online');
   });
 });
 
@@ -105,7 +108,7 @@ describe('contextLine', () => {
     scoreCap: null,
     matchSeconds: null,
     playerCount: 99,
-    maxPlayers: 98,
+    maxPlayers: 100,
     scores: []
   };
 

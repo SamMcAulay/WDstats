@@ -20,8 +20,10 @@ export function bar(score: number, max: number, width: number = BAR_WIDTH): stri
 }
 
 /**
- * maxPlayers is the PUBLIC cap; reservedSlots sit on top of it (Warcon types.ts).
- * 99 players, cap 98, 2 reserved -> "99 / 100 +1 reserved online".
+ * maxPlayers is the TOTAL slot count, with reservedSlots held back INSIDE it,
+ * so the public cap is maxPlayers - reservedSlots. Confirmed against the live
+ * builds: maxPlayers reads 100 whether or not slots are reserved.
+ * 99 players, 100 total, 2 reserved -> "99 / 100 +1 reserved online".
  */
 export function formatSlots(
   playerCount: number,
@@ -29,9 +31,9 @@ export function formatSlots(
   reservedSlots: number | null
 ): string {
   const reserved = reservedSlots ?? 0;
-  const total = maxPlayers + reserved;
-  const overflow = Math.max(0, playerCount - maxPlayers);
-  const base = `${playerCount} / ${total}`;
+  const publicCap = Math.max(0, maxPlayers - reserved);
+  const overflow = Math.max(0, playerCount - publicCap);
+  const base = `${playerCount} / ${maxPlayers}`;
   return overflow > 0 ? `${base} +${overflow} reserved online` : base;
 }
 

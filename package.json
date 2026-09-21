@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "preflight": "tsx src/preflight.ts"
+    "preflight": "tsx src/preflight.ts",
+    "mock": "node scripts/mock-warcon.mjs"
   },
   "dependencies": {
     "discord.js": "^14.16.3",

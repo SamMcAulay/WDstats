@@ -53,6 +53,24 @@ empty means that bot needs `BOT{i}_JOIN_CODE` set, and the `alternator` line
 shows the raw string beside the label `zoneLabel` produces from it — if the
 label looks wrong, that function needs adjusting for the real format.
 
+### Testing without panel access
+
+`scripts/mock-warcon.mjs` serves the same `/api/servers/{id}/summary` shape on
+`127.0.0.1:8787`, so the fleet can be exercised end to end when the real panel
+is unreachable — no Cloudflare Access service token needed.
+
+```sh
+npm run mock                                        # terminal 1
+WARCON_BASE_URL=http://127.0.0.1:8787 npm run preflight   # terminal 2
+```
+
+The override works without touching `.env`: `dotenv` does not overwrite a
+variable that is already set. Edit the `names` map in the script to match your
+own server ids. The payloads deliberately cover reserved-slot overflow, a
+zero-overflow server, zone alternators and one unreachable server, but the
+`gameServerId` and `alternator` values are invented — only a real panel call
+confirms those two.
+
 ## Configuration
 
 Every value comes from the environment. `.env` is gitignored — never commit it.

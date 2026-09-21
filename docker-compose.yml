@@ -17,6 +17,7 @@ services:
 networks:
   warcon:
     external: true
-    # CHANGE ME: the network Warcon's container is already on.
-    #   docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' <warcon-container>
+    # Warcon's compose declares no network, so it gets the project default,
+    # named after its directory: /home/debain/warcon -> warcon_default.
+    # Confirm with `docker network ls` if the panel is ever moved or renamed.
     name: warcon_default

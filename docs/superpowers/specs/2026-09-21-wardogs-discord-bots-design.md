@@ -123,6 +123,7 @@ A single tick counter increments once per poll. Bot 1 indexes its six-phase arra
 src/config.ts      env → typed config; validates all five bindings at boot, exits loudly
 src/warcon.ts      authenticated client: three headers, timeout, backoff, CF detection
 src/store.ts       latest snapshot per server + staleness clock
+src/schedule.ts    per-server fetch backoff + Warcon throttledUntil
 src/render.ts      PURE: snapshot + policy + tick → strings. zero I/O
 src/reconcile.ts   diff desired vs applied; emit only changed fields
 src/bot.ts         one Discord client + its policy object

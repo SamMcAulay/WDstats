@@ -8,6 +8,21 @@ function fakeClient() {
   };
 }
 
+/** A client whose nickname PATCH rejects for the named guilds only. */
+function clientFailingIn(...guildIds: string[]) {
+  const client = fakeClient();
+  client.rest.patch = vi.fn(async (route: string) => {
+    const failing = guildIds.find((id) => route === `/guilds/${id}/members/@me`);
+    if (failing) throw new Error(`Unknown Guild (${failing})`);
+    return {};
+  }) as never;
+  return client;
+}
+
+function fakeLog() {
+  return { warn: vi.fn() };
+}
+
 describe('DiscordJsTarget', () => {
   it('sets a Playing activity', async () => {
     const client = fakeClient();
@@ -21,6 +36,39 @@ describe('DiscordJsTarget', () => {
     expect(client.rest.patch).toHaveBeenCalledTimes(2);
     expect(client.rest.patch).toHaveBeenCalledWith('/guilds/g1/members/@me', { body: { nick: 'TEG - NA 2' } });
     expect(client.rest.patch).toHaveBeenCalledWith('/guilds/g2/members/@me', { body: { nick: 'TEG - NA 2' } });
+  });
+
+  it('patches the remaining guilds when an earlier guild fails', async () => {
+    const client = clientFailingIn('g1');
+    const target = new DiscordJsTarget(client as never, ['g1', 'g2', 'g3'], fakeLog());
+    await target.setNickname('TEG - NA 2').catch(() => {});
+    const paths = (client.rest.patch as never as { mock: { calls: unknown[][] } }).mock.calls.map(
+      (c) => c[0]
+    );
+    expect(paths).toContain('/guilds/g2/members/@me');
+    expect(paths).toContain('/guilds/g3/members/@me');
+  });
+
+  it('resolves when at least one guild succeeds', async () => {
+    const client = clientFailingIn('g1');
+    const target = new DiscordJsTarget(client as never, ['g1', 'g2'], fakeLog());
+    await expect(target.setNickname('TEG - NA 2')).resolves.toBeUndefined();
+  });
+
+  it('throws when every guild fails', async () => {
+    const client = clientFailingIn('g1', 'g2');
+    const target = new DiscordJsTarget(client as never, ['g1', 'g2'], fakeLog());
+    await expect(target.setNickname('TEG - NA 2')).rejects.toThrow(/g1.*g2/s);
+  });
+
+  it('warns once for a standing per-guild failure, not on every call', async () => {
+    const client = clientFailingIn('g1');
+    const log = fakeLog();
+    const target = new DiscordJsTarget(client as never, ['g1', 'g2'], log);
+    await target.setNickname('first');
+    await target.setNickname('second');
+    expect(log.warn).toHaveBeenCalledTimes(1);
+    expect(log.warn.mock.calls[0]![0]).toContain('g1');
   });
 
   it('patches the application description for the bio', async () => {

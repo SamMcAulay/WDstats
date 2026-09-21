@@ -69,7 +69,7 @@ async function main(): Promise<void> {
     runners.push({
       binding,
       runner: new BotRunner(
-        new DiscordJsTarget(client, binding.guildIds),
+        new DiscordJsTarget(client, binding.guildIds, log),
         policyFor(binding),
         `bot${binding.index}`,
         log

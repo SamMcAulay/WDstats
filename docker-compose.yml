@@ -1,0 +1,22 @@
+services:
+  bots:
+    build: .
+    image: wardogs-bots:latest
+    container_name: wardogs-bots
+    restart: unless-stopped
+    # Secrets live only on the VPS. This file is never built into the image.
+    env_file: .env
+    networks:
+      - warcon
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  warcon:
+    external: true
+    # CHANGE ME: the network Warcon's container is already on.
+    #   docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' <warcon-container>
+    name: warcon_default

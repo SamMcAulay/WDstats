@@ -71,6 +71,56 @@ zero-overflow server, zone alternators and one unreachable server, but the
 `gameServerId` and `alternator` values are invented — only a real panel call
 confirms those two.
 
+## Deployment
+
+The bots run on the same VPS as the Warcon panel, joined to the panel's own
+Docker network. The panel call never leaves the host, so **Cloudflare Access
+needs no changes and no service token** — leave `CF_ACCESS_CLIENT_ID` and
+`CF_ACCESS_CLIENT_SECRET` empty. `WARCON_TOKEN` is still required; Access and
+Warcon's own API auth are separate layers.
+
+Inside a container `127.0.0.1` is the container itself, so address the panel
+by its container name:
+
+```
+WARCON_BASE_URL=http://warcon:3000
+```
+
+### One-time VPS setup
+
+```sh
+git clone <repo> /srv/wardogs-bots
+cd /srv/wardogs-bots
+cp .env.example .env    # then fill it in — this file is never committed
+```
+
+Set the panel's network in `docker-compose.yml` (`networks.warcon.name`). To
+find it:
+
+```sh
+docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' <warcon-container>
+```
+
+### Auto-deploy on push
+
+`.github/workflows/deploy.yml` runs typecheck and tests, then SSHes in and
+executes `scripts/deploy.sh`, which resets the checkout to `origin/master`,
+rebuilds the image, **runs preflight against the new image**, and only then
+replaces the running fleet. A bad token or an unreachable panel aborts the
+deploy instead of taking the bots down — preflight exits non-zero and
+`set -e` stops the script before `docker compose up`.
+
+`.env` is gitignored, so `git reset --hard` cannot clobber it.
+
+Repository secrets required:
+
+| Secret | Value |
+|---|---|
+| `VPS_HOST` | Hostname or IP |
+| `VPS_USER` | SSH user that can run `docker` |
+| `VPS_SSH_KEY` | Private half of a deploy keypair, whose public half is in that user's `authorized_keys` |
+| `VPS_HOST_KEY` | Optional. Pinned host key line; without it the workflow trusts `ssh-keyscan` on first contact |
+
 ## Configuration
 
 Every value comes from the environment. `.env` is gitignored — never commit it.

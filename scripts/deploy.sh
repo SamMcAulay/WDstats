@@ -3,7 +3,7 @@
 # Expects a checkout at $DEPLOY_DIR holding a .env that git never tracks.
 set -euo pipefail
 
-DEPLOY_DIR="${DEPLOY_DIR:-/home/debain/wardogs-bots}"
+DEPLOY_DIR="${DEPLOY_DIR:-/home/debian/wardogs-bots}"
 BRANCH="${DEPLOY_BRANCH:-master}"
 
 cd "$DEPLOY_DIR"

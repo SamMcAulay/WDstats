@@ -1,5 +1,7 @@
 import { mapName, lightingLabel, expSetLabel, zoneLabel } from './labels.js';
-import type { WarconPlayer, WarconStatus } from './types.js';
+import type { BioMode } from './config.js';
+import type { Snapshot } from './store.js';
+import type { WarconLive, WarconPlayer, WarconStatus } from './types.js';
 
 export const BAR_WIDTH = 10;
 export const BIO_MAX = 400;
@@ -78,4 +80,111 @@ export function hhmmUtc(ms: number): string {
   const hours = String(date.getUTCHours()).padStart(2, '0');
   const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
+}
+
+export type Phase = { kind: 'slots' } | { kind: 'faction'; index: number };
+
+/** Bots 2-5: slots only. */
+export const SLOTS_ONLY_PHASES: Phase[] = [{ kind: 'slots' }];
+
+/** Bot 1: the 3:1:1:1 ratio as six phases. */
+export const ROTATING_PHASES: Phase[] = [
+  { kind: 'slots' },
+  { kind: 'slots' },
+  { kind: 'slots' },
+  { kind: 'faction', index: 0 },
+  { kind: 'faction', index: 1 },
+  { kind: 'faction', index: 2 }
+];
+
+export interface Policy {
+  bioMode: BioMode;
+  activityPhases: Phase[];
+  nameTemplate: string;
+  joinCodeFallback: string | null;
+}
+
+export interface Presentation {
+  nickname: string;
+  activity: string;
+  bio: string;
+}
+
+export function renderName(template: string, live: WarconLive | null): string {
+  const serverName = live?.status?.serverName ?? '';
+  const rendered = template.replace(/\{name\}/g, serverName).trim();
+  return rendered || serverName || 'Wardogs';
+}
+
+export function offlineText(lastOkAt: number | null): string {
+  return lastOkAt === null ? 'offline' : `offline · last seen ${hhmmUtc(lastOkAt)}`;
+}
+
+export function activityText(live: WarconLive, phase: Phase): string {
+  const status = live.status!;
+  const slots = formatSlots(status.playerCount, status.maxPlayers, live.reservedSlots);
+  if (phase.kind === 'slots') return slots;
+  const faction = status.scores[phase.index];
+  return faction ? `${faction.name} ${faction.score}` : slots;
+}
+
+function joinCodeLine(live: WarconLive | null, fallback: string | null): string {
+  const code = (live?.gameServerId || '').trim() || fallback || '';
+  return `Join code: ${code || 'unavailable'}`;
+}
+
+export function factionLines(joinLine: string, status: WarconStatus): string[] {
+  const lines = [joinLine];
+  const max = Math.max(0, ...status.scores.map((s) => s.score));
+  for (const faction of status.scores) {
+    lines.push(`${bar(faction.score, max)} ${faction.score} ${faction.name}`);
+  }
+  const context = contextLine(status);
+  if (context) lines.push(context);
+  return lines;
+}
+
+export function scoreboardLines(joinLine: string, players: WarconPlayer[]): string[] {
+  const lines = [joinLine];
+  const top = topPlayers(players);
+  if (top.length === 0) {
+    lines.push('No players online');
+    return lines;
+  }
+  top.forEach((p, i) => {
+    lines.push(`${i + 1}. ${truncate(p.name, NAME_MAX)} ${p.kills}-${p.deaths}`);
+  });
+  return lines;
+}
+
+export function render(snapshot: Snapshot, policy: Policy, tick: number): Presentation {
+  const live = snapshot.live;
+  const nickname = truncate(renderName(policy.nameTemplate, live), NICK_MAX);
+  const joinLine = joinCodeLine(live, policy.joinCodeFallback);
+
+  if (!live || !live.status) {
+    return {
+      nickname,
+      activity: offlineText(snapshot.lastOkAt),
+      bio: fitLines([joinLine], BIO_MAX)
+    };
+  }
+
+  const phases = policy.activityPhases.length > 0 ? policy.activityPhases : SLOTS_ONLY_PHASES;
+  const phase = phases[tick % phases.length]!;
+
+  const lines =
+    policy.bioMode === 'scoreboard'
+      ? scoreboardLines(joinLine, live.players)
+      : factionLines(joinLine, live.status);
+
+  if (!snapshot.fresh) {
+    lines.push(`⚠ ${offlineText(snapshot.lastOkAt)}`);
+  }
+
+  return {
+    nickname,
+    activity: snapshot.fresh ? activityText(live, phase) : offlineText(snapshot.lastOkAt),
+    bio: fitLines(lines, BIO_MAX)
+  };
 }

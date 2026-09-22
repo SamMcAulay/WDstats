@@ -139,7 +139,7 @@ Every value comes from the environment. `.env` is gitignored — never commit it
 | `BOT{1..5}_TOKEN` | Discord bot token |
 | `BOT{1..5}_SERVER_ID` | Warcon server id this bot displays |
 | `BOT{1..5}_GUILD_IDS` | Comma-separated guild ids for nickname updates |
-| `BOT{1..5}_NAME_TEMPLATE` | `{name}` for the live server name, or a literal such as `TEG - NA 2` |
+| `BOT{1..5}_NAME_TEMPLATE` | `{name}` for the live server name, or a literal such as `"EU#1 - TEG.gg"`. Quote any value containing `#` — unquoted, dotenv treats it as a comment and keeps only what precedes it |
 | `BOT{1..5}_JOIN_CODE` | Fallback join code for builds that do not serve `GET /v1/server-id` |
 | `POLL_INTERVAL_MS` | Default `15000` |
 | `STALE_AFTER_MS` | Default `90000` |

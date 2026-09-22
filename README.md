@@ -3,10 +3,22 @@
 Five Discord bot accounts in one Node process. Each shows one Wardogs server's
 live player count, faction scores and join code as Discord sidebar presence.
 
-All five behave identically: the activity shows player slots, and About Me
-shows the join code, faction score bars and the map/lighting/mode line. They
-differ only in which server they watch and what `BOT{i}_NAME_TEMPLATE` calls
-them.
+All five behave identically. They differ only in which server they watch and
+what `BOT{i}_NAME_TEMPLATE` calls them.
+
+```
+nickname   EU#1 - TEG.gg
+activity   99 / 100 Players on Zestafona
+bio        Join code: `1538904f-08f9-41c3-a653-ca87da2904e4`
+           ▱▱▱▱▱▱▱▱▱▱  4 Lonestar
+           ▱▱▱▱▱▱▱▱▱▱  0 Valkyra
+           ▰▰▰▰▱▱▱▱▱▱ 35 Manticore
+```
+
+The activity gains ` · +N reserved` when players are occupying reserved
+slots. Bars run to the match's win threshold (`scoreCap`, or 100 when the
+panel sends none), so a bar fills only when that faction has won. The join
+code is backticked so Discord renders it as copyable code.
 
 Design: `docs/superpowers/specs/2026-09-21-wardogs-discord-bots-design.md`
 

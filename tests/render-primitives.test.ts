@@ -1,28 +1,27 @@
 import { describe, it, expect } from 'vitest';
-import { bar, formatSlots, contextLine, truncate, fitLines, hhmmUtc } from '../src/render.js';
-import type { WarconPlayer, WarconStatus } from '../src/types.js';
+import { bar, reservedOverflow, truncate, fitLines, hhmmUtc } from '../src/render.js';
 
-describe('formatSlots', () => {
-  it('adds reserved slots on top of the public cap', () => {
-    expect(formatSlots(99, 100, 2)).toBe('99 / 100 +1 reserved online');
+describe('reservedOverflow', () => {
+  it('counts the players sitting in reserved slots', () => {
+    expect(reservedOverflow(99, 100, 2)).toBe(1);
   });
-  it('hides the suffix when nobody is in an overflow slot', () => {
-    expect(formatSlots(40, 100, 2)).toBe('40 / 100');
+  it('is zero when the public cap is not exceeded', () => {
+    expect(reservedOverflow(40, 100, 2)).toBe(0);
   });
-  it('handles a server with no reserved slots', () => {
-    expect(formatSlots(40, 100, 0)).toBe('40 / 100');
+  it('is zero for a server with no reserved slots', () => {
+    expect(reservedOverflow(40, 100, 0)).toBe(0);
   });
   it('treats an unknown reserved count as zero', () => {
-    expect(formatSlots(40, 100, null)).toBe('40 / 100');
+    expect(reservedOverflow(40, 100, null)).toBe(0);
   });
-  it('handles an empty server', () => {
-    expect(formatSlots(0, 100, 2)).toBe('0 / 100');
+  it('is zero on an empty server', () => {
+    expect(reservedOverflow(0, 100, 2)).toBe(0);
   });
-  it('handles a full server with every reserved slot taken', () => {
-    expect(formatSlots(100, 100, 2)).toBe('100 / 100 +2 reserved online');
+  it('counts every reserved slot on a full server', () => {
+    expect(reservedOverflow(100, 100, 2)).toBe(2);
   });
   it('clamps when reserved slots exceed the cap', () => {
-    expect(formatSlots(3, 2, 5)).toBe('3 / 2 +3 reserved online');
+    expect(reservedOverflow(3, 2, 5)).toBe(3);
   });
 });
 
@@ -70,29 +69,6 @@ describe('fitLines', () => {
 });
 
 
-describe('contextLine', () => {
-  const status: WarconStatus = {
-    serverName: 'NA#2 - TEG.gg',
-    map: 'NorthAmerica',
-    experiences: ['NorthAmerica_KOTH_01'],
-    lighting: 'DayClear',
-    alternator: 'ZoneAlternator.NorthAmerica.Houses.Circle',
-    scoreCap: null,
-    matchSeconds: null,
-    playerCount: 99,
-    maxPlayers: 100,
-    scores: []
-  };
-
-  it('renders the four-part line from the screenshot', () => {
-    expect(contextLine(status)).toBe('Zestafona · Day Clear · King of the Hill · Zestafona Houses Circle');
-  });
-
-  it('omits parts that are unknown', () => {
-    expect(contextLine({ ...status, lighting: '', experiences: [] }))
-      .toBe('Zestafona · Zestafona Houses Circle');
-  });
-});
 
 describe('hhmmUtc', () => {
   it('formats as zero-padded UTC hours and minutes', () => {

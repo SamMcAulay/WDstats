@@ -69,21 +69,39 @@ const bot1: Policy = {
 };
 
 describe('render — standard bots', () => {
-  it('shows slots as the activity', () => {
-    expect(render(snapshot(), standard).activity).toBe('99 / 100 +1 reserved online');
+  it('shows the player count and the map as the activity', () => {
+    expect(render(snapshot(), standard).activity).toBe(
+      '99 / 100 Players on Zestafona · +1 reserved'
+    );
+  });
+
+  it('drops the reserved note when nobody is in an overflow slot', () => {
+    const snap = snapshot({ live: live({ reservedSlots: 0 }) });
+    expect(render(snap, standard).activity).toBe('99 / 100 Players on Zestafona');
   });
 
 
-  it('builds the faction bio with the join code first', () => {
+  it('builds the bio from the code-wrapped join code and the bars alone', () => {
     expect(render(snapshot(), standard).bio).toBe(
       [
-        'Join code: 7f3a9c21-4e88-4b1a-9d02-6c5e1f0a8b77',
-        '▰▰▰▰▰▰▰▰▰▰ 33 Manticore',
-        '▰▰▰▰▰▰▰▰▱▱ 26 Valkyra',
-        '▰▰▰▰▰▰▰▱▱▱ 24 Lonestar',
-        'Zestafona · Day Clear · King of the Hill · Zestafona Houses Circle'
+        'Join code: `7f3a9c21-4e88-4b1a-9d02-6c5e1f0a8b77`',
+        '▰▰▰▱▱▱▱▱▱▱ 33 Manticore',
+        '▰▰▰▱▱▱▱▱▱▱ 26 Valkyra',
+        '▰▰▱▱▱▱▱▱▱▱ 24 Lonestar'
       ].join('\n')
     );
+  });
+
+  it('scales the bars to the win threshold when the panel sends one', () => {
+    const snap = snapshot({ live: live({ status: status({ scoreCap: 250 }) }) });
+    expect(render(snap, standard).bio).toContain('▰▱▱▱▱▱▱▱▱▱ 33 Manticore');
+  });
+
+  it('fills a bar only when a faction reaches the cap', () => {
+    const snap = snapshot({
+      live: live({ status: status({ scores: [{ name: 'Manticore', colorHex: '#000', score: 100 }] }) })
+    });
+    expect(render(snap, standard).bio).toContain('▰▰▰▰▰▰▰▰▰▰ 100 Manticore');
   });
 
   it('renders bot 1 exactly like the rest, bar its name template', () => {
@@ -120,7 +138,7 @@ describe('render — offline and stale', () => {
   it('still shows the fallback join code when never observed', () => {
     const snap = snapshot({ live: null, fresh: false, lastOkAt: null });
     const policy = { ...standard, joinCodeFallback: 'fallback-code' };
-    expect(render(snap, policy).bio).toContain('Join code: fallback-code');
+    expect(render(snap, policy).bio).toContain('Join code: `fallback-code`');
   });
 });
 
@@ -133,7 +151,7 @@ describe('render — join code fallback', () => {
   it('falls back when the build does not serve one', () => {
     const snap = snapshot({ live: live({ gameServerId: '' }) });
     const policy = { ...standard, joinCodeFallback: 'fallback-code' };
-    expect(render(snap, policy).bio).toContain('Join code: fallback-code');
+    expect(render(snap, policy).bio).toContain('Join code: `fallback-code`');
   });
 
   it('says unavailable when there is neither', () => {

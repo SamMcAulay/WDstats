@@ -37,8 +37,8 @@ function live(id, i) {
       throttledUntil: null, status: null, players: [], observedAt: new Date().toISOString()
     };
   }
-  const playerCount = [64, 99, 12, 100][i];
-  const reservedSlots = [0, 2, 4, 4][i];
+  const playerCount = [99, 99, 0, 100][i];
+  const reservedSlots = [1, 1, 1, 1][i];
   return {
     serverId: id,
     ok: true,
@@ -55,13 +55,14 @@ function live(id, i) {
       experiences: [['KOTH_Standard'], ['KOTH_Infantry'], ['Conquest'], ['KOTH_Hardcore']][i],
       lighting: ['Day', 'Night', 'Dawn', 'Day'][i],
       alternator: ['none', 'ZoneAlternator.Europe.North', 'ZoneAlternator.NorthAmerica.Central', 'none'][i],
-      scoreCap: 1000,
+      scoreCap: null,
       matchSeconds: 1200,
       playerCount,
-      maxPlayers: [64, 100, 64, 100][i],
+      maxPlayers: [100, 100, 100, 100][i],
       scores: [
-        { name: 'Valkyra', colorHex: '#4488ff', score: [620, 410, 180, 950][i] },
-        { name: 'Lonestar', colorHex: '#ff6644', score: [480, 700, 220, 300][i] }
+        { name: 'Lonestar', colorHex: '#2196f3', score: [4, 6, 0, 72][i] },
+        { name: 'Valkyra', colorHex: '#f44336', score: [0, 16, 0, 0][i] },
+        { name: 'Manticore', colorHex: '#4caf50', score: [35, 51, 0, 100][i] }
       ]
     },
     players: players(Math.min(playerCount, 10)),

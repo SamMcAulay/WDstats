@@ -1,10 +1,11 @@
-import { mapName, lightingLabel, expSetLabel, zoneLabel } from './labels.js';
+import { mapName } from './labels.js';
 import type { Snapshot } from './store.js';
 import type { WarconLive, WarconStatus } from './types.js';
 
 export const BAR_WIDTH = 10;
 export const BIO_MAX = 400;
 export const NICK_MAX = 32;
+export const DEFAULT_SCORE_CAP = 100;
 
 const FILLED = '▰';
 const EMPTY = '▱';
@@ -17,32 +18,18 @@ export function bar(score: number, max: number, width: number = BAR_WIDTH): stri
 }
 
 /**
- * maxPlayers is the TOTAL slot count, with reservedSlots held back INSIDE it,
- * so the public cap is maxPlayers - reservedSlots. Confirmed against the live
- * builds: maxPlayers reads 100 whether or not slots are reserved.
- * 99 players, 100 total, 2 reserved -> "99 / 100 +1 reserved online".
+ * How many players are sitting in reserved slots. maxPlayers is the TOTAL
+ * count with reservedSlots held back INSIDE it, so the public cap is
+ * maxPlayers - reservedSlots and anyone beyond it holds a reserved slot.
+ * Confirmed against the live builds: maxPlayers reads 100 either way.
  */
-export function formatSlots(
+export function reservedOverflow(
   playerCount: number,
   maxPlayers: number,
   reservedSlots: number | null
-): string {
-  const reserved = reservedSlots ?? 0;
-  const publicCap = Math.max(0, maxPlayers - reserved);
-  const overflow = Math.max(0, playerCount - publicCap);
-  const base = `${playerCount} / ${maxPlayers}`;
-  return overflow > 0 ? `${base} +${overflow} reserved online` : base;
-}
-
-export function contextLine(status: WarconStatus): string {
-  return [
-    mapName(status.map),
-    lightingLabel(status.lighting),
-    expSetLabel(status.experiences),
-    zoneLabel(status.alternator)
-  ]
-    .filter((part) => part && part !== '—')
-    .join(' · ');
+): number {
+  const publicCap = Math.max(0, maxPlayers - (reservedSlots ?? 0));
+  return Math.max(0, playerCount - publicCap);
 }
 
 export function truncate(text: string, max: number): string {
@@ -97,23 +84,28 @@ export function offlineText(lastOkAt: number | null): string {
 
 export function activityText(live: WarconLive): string {
   const status = live.status!;
-  return formatSlots(status.playerCount, status.maxPlayers, live.reservedSlots);
+  const overflow = reservedOverflow(status.playerCount, status.maxPlayers, live.reservedSlots);
+  const base = `${status.playerCount} / ${status.maxPlayers} Players on ${mapName(status.map)}`;
+  return overflow > 0 ? `${base} · +${overflow} reserved` : base;
 }
 
+/** Backticked so Discord renders it as code: one tap to copy, no wrapping. */
 function joinCodeLine(live: WarconLive | null, fallback: string | null): string {
   const code = (live?.gameServerId || '').trim() || fallback || '';
-  return `Join code: ${code || 'unavailable'}`;
+  return code ? `Join code: \`${code}\`` : 'Join code: unavailable';
 }
 
+/**
+ * Bars run to the match's win threshold, so one only fills when that faction
+ * has actually won. scoreCap is null on builds that do not report it; 100 is
+ * the standard cap.
+ */
 export function factionLines(joinLine: string, status: WarconStatus): string[] {
-  const lines = [joinLine];
-  const max = Math.max(0, ...status.scores.map((s) => s.score));
-  for (const faction of status.scores) {
-    lines.push(`${bar(faction.score, max)} ${faction.score} ${faction.name}`);
-  }
-  const context = contextLine(status);
-  if (context) lines.push(context);
-  return lines;
+  const cap = status.scoreCap ?? DEFAULT_SCORE_CAP;
+  return [
+    joinLine,
+    ...status.scores.map((f) => `${bar(f.score, cap)} ${f.score} ${f.name}`)
+  ];
 }
 
 export function render(snapshot: Snapshot, policy: Policy): Presentation {

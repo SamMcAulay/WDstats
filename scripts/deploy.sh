@@ -22,12 +22,20 @@ docker compose build
 
 # Credentials and panel reachability are checked against the NEW image before
 # the running fleet is replaced. Read-only: it never writes to Discord.
+#
+# -T and </dev/null both matter: this script is fed to bash over stdin by the
+# workflow, and `docker compose run` attaches stdin by default — without them
+# it swallows the rest of this file and everything below silently never runs.
 echo "running preflight…"
-docker compose run --rm --no-deps bots node dist/preflight.js
+docker compose run --rm --no-deps -T bots node dist/preflight.js </dev/null
 
-docker compose up -d
+# Deliberately no `docker image prune` anywhere in this script: every command
+# stays scoped to this compose project, so nothing can reach the panel's
+# containers or images. Old layers are cleaned by hand instead.
+docker compose up -d </dev/null
 
-# Deliberately no `docker image prune`: every command here stays scoped to
-# this compose project, so nothing can reach the panel's containers or
-# images. Old layers are cleaned by hand instead.
+# A truncated or half-failed run must not look like a success.
+docker compose ps --status running --format '{{.Name}}' | grep -q . \
+  || { echo "container is not running after up -d" >&2; exit 1; }
+
 echo "deployed $(git rev-parse --short HEAD)"

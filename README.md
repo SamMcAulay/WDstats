@@ -112,6 +112,13 @@ deploy instead of taking the bots down — preflight exits non-zero and
 
 `.env` is gitignored, so `git reset --hard` cannot clobber it.
 
+Every Docker command in the deploy is scoped to this compose project, and the
+panel's network is declared `external`, so Compose attaches to it but never
+creates, alters or removes it. Nothing in the deploy touches the panel's
+containers, images or volumes, and a missing network fails the deploy rather
+than changing anything. Old build layers therefore accumulate; clear them by
+hand when you choose to.
+
 Repository secrets required:
 
 | Secret | Value |

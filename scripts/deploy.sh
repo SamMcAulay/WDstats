@@ -26,5 +26,8 @@ echo "running preflight…"
 docker compose run --rm --no-deps bots node dist/preflight.js
 
 docker compose up -d
-docker image prune -f >/dev/null
+
+# Deliberately no `docker image prune`: every command here stays scoped to
+# this compose project, so nothing can reach the panel's containers or
+# images. Old layers are cleaned by hand instead.
 echo "deployed $(git rev-parse --short HEAD)"

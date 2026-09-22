@@ -7,7 +7,6 @@ import { FetchScheduler } from './schedule.js';
 import { BotRunner } from './bot.js';
 import type { Logger } from './bot.js';
 import { DiscordJsTarget } from './discord-target.js';
-import { ROTATING_PHASES, SLOTS_ONLY_PHASES } from './render.js';
 import type { Policy } from './render.js';
 
 const log: Logger = {
@@ -21,8 +20,6 @@ const MAX_BACKOFF_MS = 300_000;
 
 function policyFor(bot: BotBinding): Policy {
   return {
-    bioMode: bot.bioMode,
-    activityPhases: bot.bioMode === 'scoreboard' ? ROTATING_PHASES : SLOTS_ONLY_PHASES,
     nameTemplate: bot.nameTemplate,
     joinCodeFallback: bot.joinCodeFallback
   };
@@ -77,8 +74,6 @@ async function main(): Promise<void> {
     });
   }
 
-  let tick = 0;
-
   const poll = async (): Promise<void> => {
     const serverIds = [...new Set(config.bots.map((b) => b.serverId))];
     await Promise.all(
@@ -100,9 +95,8 @@ async function main(): Promise<void> {
     );
 
     await Promise.all(
-      runners.map(({ binding, runner }) => runner.update(store.get(binding.serverId), tick))
+      runners.map(({ binding, runner }) => runner.update(store.get(binding.serverId)))
     );
-    tick += 1;
   };
 
   await poll();

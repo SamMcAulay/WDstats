@@ -1,7 +1,5 @@
 import 'dotenv/config';
 
-export type BioMode = 'factions' | 'scoreboard';
-
 export interface BotBinding {
   index: number;
   token: string;
@@ -9,7 +7,6 @@ export interface BotBinding {
   guildIds: string[];
   nameTemplate: string;
   joinCodeFallback: string | null;
-  bioMode: BioMode;
 }
 
 export interface Config {
@@ -68,8 +65,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       serverId,
       guildIds,
       nameTemplate: (env[`BOT${i}_NAME_TEMPLATE`] ?? '').trim() || '{name}',
-      joinCodeFallback: opt(`BOT${i}_JOIN_CODE`),
-      bioMode: i === 1 ? 'scoreboard' : 'factions'
+      joinCodeFallback: opt(`BOT${i}_JOIN_CODE`)
     });
   }
 

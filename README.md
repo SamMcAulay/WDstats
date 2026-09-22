@@ -3,11 +3,10 @@
 Five Discord bot accounts in one Node process. Each shows one Wardogs server's
 live player count, faction scores and join code as Discord sidebar presence.
 
-- **Bots 2-5** — activity shows player slots; About Me shows the join code,
-  faction score bars and the map/lighting/mode line.
-- **Bot 1** (A/B variant) — activity rotates 3:1:1:1 across slots, Manticore,
-  Valkyra and Lonestar; About Me shows the join code and the top five players
-  by kills.
+All five behave identically: the activity shows player slots, and About Me
+shows the join code, faction score bars and the map/lighting/mode line. They
+differ only in which server they watch and what `BOT{i}_NAME_TEMPLATE` calls
+them.
 
 Design: `docs/superpowers/specs/2026-09-21-wardogs-discord-bots-design.md`
 
@@ -44,7 +43,7 @@ writing anything to Discord. Safe to run against production tokens. It:
 - prints the raw payload fields (`maxPlayers`, `reservedSlots`, `alternator`,
   `gameServerId`, `startedAt`) beside the values derived from them
 - prints exactly what each bot would display, with every field measured
-  against its Discord limit, including Bot 1's full six-tick rotation
+  against its Discord limit
 
 Exits non-zero if any check fails, so it also works as a deploy gate.
 

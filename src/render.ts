@@ -1,13 +1,10 @@
 import { mapName, lightingLabel, expSetLabel, zoneLabel } from './labels.js';
-import type { BioMode } from './config.js';
 import type { Snapshot } from './store.js';
-import type { WarconLive, WarconPlayer, WarconStatus } from './types.js';
+import type { WarconLive, WarconStatus } from './types.js';
 
 export const BAR_WIDTH = 10;
 export const BIO_MAX = 400;
 export const NICK_MAX = 32;
-export const NAME_MAX = 20;
-export const TOP_N = 5;
 
 const FILLED = '▰';
 const EMPTY = '▱';
@@ -70,13 +67,6 @@ export function fitLines(lines: string[], max: number): string {
   return kept.join('\n');
 }
 
-/** Kills desc, then fewer deaths, then name — the ordering Warcon itself applies. */
-export function topPlayers(players: WarconPlayer[], n: number = TOP_N): WarconPlayer[] {
-  return [...players]
-    .sort((a, b) => b.kills - a.kills || a.deaths - b.deaths || a.name.localeCompare(b.name))
-    .slice(0, n);
-}
-
 export function hhmmUtc(ms: number): string {
   const date = new Date(ms);
   const hours = String(date.getUTCHours()).padStart(2, '0');
@@ -84,24 +74,7 @@ export function hhmmUtc(ms: number): string {
   return `${hours}:${minutes}`;
 }
 
-export type Phase = { kind: 'slots' } | { kind: 'faction'; index: number };
-
-/** Bots 2-5: slots only. */
-export const SLOTS_ONLY_PHASES: Phase[] = [{ kind: 'slots' }];
-
-/** Bot 1: the 3:1:1:1 ratio as six phases. */
-export const ROTATING_PHASES: Phase[] = [
-  { kind: 'slots' },
-  { kind: 'slots' },
-  { kind: 'slots' },
-  { kind: 'faction', index: 0 },
-  { kind: 'faction', index: 1 },
-  { kind: 'faction', index: 2 }
-];
-
 export interface Policy {
-  bioMode: BioMode;
-  activityPhases: Phase[];
   nameTemplate: string;
   joinCodeFallback: string | null;
 }
@@ -122,12 +95,9 @@ export function offlineText(lastOkAt: number | null): string {
   return lastOkAt === null ? 'offline' : `offline · last seen ${hhmmUtc(lastOkAt)}`;
 }
 
-export function activityText(live: WarconLive, phase: Phase): string {
+export function activityText(live: WarconLive): string {
   const status = live.status!;
-  const slots = formatSlots(status.playerCount, status.maxPlayers, live.reservedSlots);
-  if (phase.kind === 'slots') return slots;
-  const faction = status.scores[phase.index];
-  return faction ? `${faction.name} ${faction.score}` : slots;
+  return formatSlots(status.playerCount, status.maxPlayers, live.reservedSlots);
 }
 
 function joinCodeLine(live: WarconLive | null, fallback: string | null): string {
@@ -146,20 +116,7 @@ export function factionLines(joinLine: string, status: WarconStatus): string[] {
   return lines;
 }
 
-export function scoreboardLines(joinLine: string, players: WarconPlayer[]): string[] {
-  const lines = [joinLine];
-  const top = topPlayers(players);
-  if (top.length === 0) {
-    lines.push('No players online');
-    return lines;
-  }
-  top.forEach((p, i) => {
-    lines.push(`${i + 1}. ${truncate(p.name, NAME_MAX)} ${p.kills}-${p.deaths}`);
-  });
-  return lines;
-}
-
-export function render(snapshot: Snapshot, policy: Policy, tick: number): Presentation {
+export function render(snapshot: Snapshot, policy: Policy): Presentation {
   const live = snapshot.live;
   const nickname = truncate(renderName(policy.nameTemplate, live), NICK_MAX);
   const joinLine = joinCodeLine(live, policy.joinCodeFallback);
@@ -172,13 +129,7 @@ export function render(snapshot: Snapshot, policy: Policy, tick: number): Presen
     };
   }
 
-  const phases = policy.activityPhases.length > 0 ? policy.activityPhases : SLOTS_ONLY_PHASES;
-  const phase = phases[tick % phases.length]!;
-
-  const lines =
-    policy.bioMode === 'scoreboard'
-      ? scoreboardLines(joinLine, live.players)
-      : factionLines(joinLine, live.status);
+  const lines = factionLines(joinLine, live.status);
 
   if (!snapshot.fresh) {
     lines.push(`⚠ ${offlineText(snapshot.lastOkAt)}`);
@@ -186,7 +137,7 @@ export function render(snapshot: Snapshot, policy: Policy, tick: number): Presen
 
   return {
     nickname,
-    activity: snapshot.fresh ? activityText(live, phase) : offlineText(snapshot.lastOkAt),
+    activity: snapshot.fresh ? activityText(live) : offlineText(snapshot.lastOkAt),
     bio: fitLines(lines, BIO_MAX)
   };
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bar, formatSlots, contextLine, truncate, fitLines, topPlayers, hhmmUtc } from '../src/render.js';
+import { bar, formatSlots, contextLine, truncate, fitLines, hhmmUtc } from '../src/render.js';
 import type { WarconPlayer, WarconStatus } from '../src/types.js';
 
 describe('formatSlots', () => {
@@ -69,34 +69,6 @@ describe('fitLines', () => {
   });
 });
 
-describe('topPlayers', () => {
-  const players = (...rows: Array<[string, number, number]>): WarconPlayer[] =>
-    rows.map(([name, kills, deaths]) => ({ name, steamId: '', faction: null, kills, deaths, cash: 0, ping: null }));
-
-  it('sorts by kills descending', () => {
-    const top = topPlayers(players(['low', 1, 0], ['high', 9, 0]));
-    expect(top.map((p) => p.name)).toEqual(['high', 'low']);
-  });
-  it('breaks kill ties on fewer deaths', () => {
-    const top = topPlayers(players(['many', 5, 9], ['few', 5, 1]));
-    expect(top.map((p) => p.name)).toEqual(['few', 'many']);
-  });
-  it('breaks remaining ties on name', () => {
-    const top = topPlayers(players(['zed', 5, 5], ['alice', 5, 5]));
-    expect(top.map((p) => p.name)).toEqual(['alice', 'zed']);
-  });
-  it('returns at most five', () => {
-    expect(topPlayers(players(['a',1,0],['b',2,0],['c',3,0],['d',4,0],['e',5,0],['f',6,0]))).toHaveLength(5);
-  });
-  it('does not mutate its input', () => {
-    const input = players(['a', 1, 0], ['b', 9, 0]);
-    topPlayers(input);
-    expect(input[0]!.name).toBe('a');
-  });
-  it('handles an empty roster', () => {
-    expect(topPlayers([])).toEqual([]);
-  });
-});
 
 describe('contextLine', () => {
   const status: WarconStatus = {

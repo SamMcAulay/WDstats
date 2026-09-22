@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, ROTATING_PHASES, SLOTS_ONLY_PHASES, renderName, offlineText, BIO_MAX, NICK_MAX } from '../src/render.js';
+import { render, renderName, offlineText, BIO_MAX, NICK_MAX } from '../src/render.js';
 import type { Policy } from '../src/render.js';
 import type { Snapshot } from '../src/store.js';
 import type { WarconLive, WarconPlayer, WarconStatus } from '../src/types.js';
@@ -58,32 +58,24 @@ function snapshot(overrides: Partial<Snapshot> = {}): Snapshot {
 }
 
 const standard: Policy = {
-  bioMode: 'factions',
-  activityPhases: SLOTS_ONLY_PHASES,
   nameTemplate: '{name}',
   joinCodeFallback: null
 };
 
-const variant: Policy = {
-  bioMode: 'scoreboard',
-  activityPhases: ROTATING_PHASES,
+/** Bot 1 once had its own variant; it now differs only by name template. */
+const bot1: Policy = {
   nameTemplate: 'TEG - NA 2',
   joinCodeFallback: null
 };
 
 describe('render — standard bots', () => {
   it('shows slots as the activity', () => {
-    expect(render(snapshot(), standard, 0).activity).toBe('99 / 100 +1 reserved online');
+    expect(render(snapshot(), standard).activity).toBe('99 / 100 +1 reserved online');
   });
 
-  it('ignores the tick', () => {
-    for (const tick of [0, 1, 2, 3, 99]) {
-      expect(render(snapshot(), standard, tick).activity).toBe('99 / 100 +1 reserved online');
-    }
-  });
 
   it('builds the faction bio with the join code first', () => {
-    expect(render(snapshot(), standard, 0).bio).toBe(
+    expect(render(snapshot(), standard).bio).toBe(
       [
         'Join code: 7f3a9c21-4e88-4b1a-9d02-6c5e1f0a8b77',
         '▰▰▰▰▰▰▰▰▰▰ 33 Manticore',
@@ -94,107 +86,78 @@ describe('render — standard bots', () => {
     );
   });
 
+  it('renders bot 1 exactly like the rest, bar its name template', () => {
+    const one = render(snapshot(), bot1);
+    const rest = render(snapshot(), standard);
+    expect(one.activity).toBe(rest.activity);
+    expect(one.bio).toBe(rest.bio);
+    expect(one.nickname).toBe('TEG - NA 2');
+  });
+
   it('takes the nickname from the live server name', () => {
-    expect(render(snapshot(), standard, 0).nickname).toBe('NA#2 - TEG.gg');
+    expect(render(snapshot(), standard).nickname).toBe('NA#2 - TEG.gg');
   });
 });
 
-describe('render — bot 1 variant', () => {
-  it('cycles slots three times then each faction once', () => {
-    const activities = [0, 1, 2, 3, 4, 5].map((t) => render(snapshot(), variant, t).activity);
-    expect(activities).toEqual([
-      '99 / 100 +1 reserved online',
-      '99 / 100 +1 reserved online',
-      '99 / 100 +1 reserved online',
-      'Manticore 33',
-      'Valkyra 26',
-      'Lonestar 24'
-    ]);
-  });
-
-  it('wraps around after six ticks', () => {
-    expect(render(snapshot(), variant, 6).activity).toBe(render(snapshot(), variant, 0).activity);
-    expect(render(snapshot(), variant, 9).activity).toBe('Manticore 33');
-  });
-
-  it('lists the top five with the join code first', () => {
-    expect(render(snapshot(), variant, 0).bio).toBe(
-      [
-        'Join code: 7f3a9c21-4e88-4b1a-9d02-6c5e1f0a8b77',
-        '1. PlayerOne 24-7',
-        '2. PlayerTwo 19-11',
-        '3. PlayerThree 17-9'
-      ].join('\n')
-    );
-  });
-
-  it('uses its configured literal nickname', () => {
-    expect(render(snapshot(), variant, 0).nickname).toBe('TEG - NA 2');
-  });
-
-  it('says so when nobody is online', () => {
-    const snap = snapshot({ live: live({ players: [] }) });
-    expect(render(snap, variant, 0).bio).toContain('No players online');
-  });
-});
 
 describe('render — offline and stale', () => {
   it('shows offline with the last seen time when stale', () => {
     const snap = snapshot({ fresh: false });
-    expect(render(snap, standard, 0).activity).toBe('offline · last seen 14:32');
+    expect(render(snap, standard).activity).toBe('offline · last seen 14:32');
   });
 
   it('keeps the last known scores with a stale marker', () => {
-    const bio = render(snapshot({ fresh: false }), standard, 0).bio;
+    const bio = render(snapshot({ fresh: false }), standard).bio;
     expect(bio).toContain('33 Manticore');
     expect(bio).toContain('⚠ offline · last seen 14:32');
   });
 
   it('shows plain offline when never observed', () => {
     const snap = snapshot({ live: null, fresh: false, lastOkAt: null });
-    expect(render(snap, standard, 0).activity).toBe('offline');
+    expect(render(snap, standard).activity).toBe('offline');
   });
 
   it('still shows the fallback join code when never observed', () => {
     const snap = snapshot({ live: null, fresh: false, lastOkAt: null });
     const policy = { ...standard, joinCodeFallback: 'fallback-code' };
-    expect(render(snap, policy, 0).bio).toContain('Join code: fallback-code');
+    expect(render(snap, policy).bio).toContain('Join code: fallback-code');
   });
 });
 
 describe('render — join code fallback', () => {
   it('prefers the live join code', () => {
     const policy = { ...standard, joinCodeFallback: 'fallback-code' };
-    expect(render(snapshot(), policy, 0).bio).toContain('7f3a9c21');
+    expect(render(snapshot(), policy).bio).toContain('7f3a9c21');
   });
 
   it('falls back when the build does not serve one', () => {
     const snap = snapshot({ live: live({ gameServerId: '' }) });
     const policy = { ...standard, joinCodeFallback: 'fallback-code' };
-    expect(render(snap, policy, 0).bio).toContain('Join code: fallback-code');
+    expect(render(snap, policy).bio).toContain('Join code: fallback-code');
   });
 
   it('says unavailable when there is neither', () => {
     const snap = snapshot({ live: live({ gameServerId: '' }) });
-    expect(render(snap, standard, 0).bio).toContain('Join code: unavailable');
+    expect(render(snap, standard).bio).toContain('Join code: unavailable');
   });
 });
 
 describe('render — budgets', () => {
-  it('never exceeds the bio limit with worst-case names', () => {
-    const many = Array.from({ length: 20 }, (_, i) => player('W'.repeat(40) + i, 50 - i, i));
-    const snap = snapshot({ live: live({ players: many }) });
-    expect(render(snap, variant, 0).bio.length).toBeLessThanOrEqual(BIO_MAX);
+  it('never exceeds the bio limit with worst-case faction names', () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      name: 'F'.repeat(40) + i,
+      colorHex: '#000000',
+      score: 100 - i
+    }));
+    const snap = snapshot({ live: live({ status: status({ scores: many }) }) });
+    expect(render(snap, standard).bio.length).toBeLessThanOrEqual(BIO_MAX);
   });
 
-  it('truncates player names to twenty characters', () => {
-    const snap = snapshot({ live: live({ players: [player('A'.repeat(40), 9, 0)] }) });
-    expect(render(snap, variant, 0).bio).toContain('1. ' + 'A'.repeat(19) + '…');
-  });
+
 
   it('never exceeds the nickname limit', () => {
     const snap = snapshot({ live: live({ status: status({ serverName: 'N'.repeat(60) }) }) });
-    expect(render(snap, standard, 0).nickname.length).toBeLessThanOrEqual(NICK_MAX);
+    expect(render(snap, standard).nickname.length).toBeLessThanOrEqual(NICK_MAX);
   });
 });
 

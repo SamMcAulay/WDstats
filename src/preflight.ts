@@ -11,7 +11,7 @@ import type { BotBinding, Config } from './config.js';
 import { WarconClient, CloudflareBlockedError, WarconAuthError } from './warcon.js';
 import { SnapshotStore } from './store.js';
 import { zoneLabel } from './labels.js';
-import { render, ROTATING_PHASES, SLOTS_ONLY_PHASES, BIO_MAX, NICK_MAX } from './render.js';
+import { render, BIO_MAX, NICK_MAX } from './render.js';
 import type { Policy, Presentation } from './render.js';
 import type { WarconLive } from './types.js';
 
@@ -91,8 +91,6 @@ export function summarise(results: ProbeResult[]): { ok: boolean; line: string }
 
 function policyFor(bot: BotBinding): Policy {
   return {
-    bioMode: bot.bioMode,
-    activityPhases: bot.bioMode === 'scoreboard' ? ROTATING_PHASES : SLOTS_ONLY_PHASES,
     nameTemplate: bot.nameTemplate,
     joinCodeFallback: bot.joinCodeFallback
   };
@@ -184,14 +182,8 @@ async function main(): Promise<void> {
   for (const bot of config.bots) {
     const policy = policyFor(bot);
     const snapshot = store.get(bot.serverId);
-    console.log(`\n  bot${bot.index}  (${bot.bioMode}, server ${bot.serverId})`);
-    if (bot.bioMode === 'scoreboard') {
-      // Bot 1 rotates across six ticks; show the whole cycle.
-      for (const tick of [0, 3, 4, 5]) {
-        console.log(`    tick ${tick} → Playing ${render(snapshot, policy, tick).activity}`);
-      }
-    }
-    for (const line of presentationLines(render(snapshot, policy, 0))) {
+    console.log(`\n  bot${bot.index}  (server ${bot.serverId})`);
+    for (const line of presentationLines(render(snapshot, policy))) {
       console.log(`    ${line}`);
     }
   }

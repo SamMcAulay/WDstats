@@ -30,8 +30,8 @@ export class BotRunner {
     return { ...this.applied };
   }
 
-  async update(snapshot: Snapshot, tick: number): Promise<void> {
-    const desired = render(snapshot, this.policy, tick);
+  async update(snapshot: Snapshot): Promise<void> {
+    const desired = render(snapshot, this.policy);
     const changes = diff(desired, this.applied);
 
     // Each field is applied independently: one failure must not block the

@@ -26,12 +26,6 @@ describe('loadConfig', () => {
     expect(loadConfig(validEnv()).warconBaseUrl).toBe('https://panel.example.com');
   });
 
-  it('gives bot 1 the scoreboard variant and the rest factions', () => {
-    const cfg = loadConfig(validEnv());
-    expect(cfg.bots[0]!.bioMode).toBe('scoreboard');
-    expect(cfg.bots[1]!.bioMode).toBe('factions');
-    expect(cfg.bots[4]!.bioMode).toBe('factions');
-  });
 
   it('splits comma-separated guild ids and trims them', () => {
     const env = validEnv();

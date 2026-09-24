@@ -7,9 +7,11 @@ const names = {
   '61dd0256-b780-40b5-a9fa-2b5bc542ce88': 'TEG - EU 2',
   '0abd34ac-c564-4d2e-9853-263d707528c3': 'TEG - NA 1',
   '33daa183-8c52-41f8-b936-b8524eaf7387': 'TEG - NA 2',
-  'ff450efd-8080-4cab-a0ac-e5a3bf8fbf5f': 'TEG - Hardcore'
+  'ff450efd-8080-4cab-a0ac-e5a3bf8fbf5f': 'TEG - Hardcore',
+  '00000000-0000-4000-8000-000000000006': 'TEG - NA 3'
 };
 
+// Replace the NA 3 placeholder id with the real one to run the live fleet against the mock.
 const ids = Object.keys(names);
 
 function players(n) {
@@ -37,8 +39,8 @@ function live(id, i) {
       throttledUntil: null, status: null, players: [], observedAt: new Date().toISOString()
     };
   }
-  const playerCount = [99, 99, 0, 100][i];
-  const reservedSlots = [1, 1, 1, 1][i];
+  const playerCount = [99, 99, 0, 100, 0, 64][i];
+  const reservedSlots = [1, 1, 1, 1, 0, 0][i];
   return {
     serverId: id,
     ok: true,
@@ -51,18 +53,18 @@ function live(id, i) {
     throttledUntil: null,
     status: {
       serverName: names[id],
-      map: ['Kavkazi', 'Europe', 'NorthAmerica', 'Kavkazi'][i],
-      experiences: [['KOTH_Standard'], ['KOTH_Infantry'], ['Conquest'], ['KOTH_Hardcore']][i],
-      lighting: ['Day', 'Night', 'Dawn', 'Day'][i],
-      alternator: ['none', 'ZoneAlternator.Europe.North', 'ZoneAlternator.NorthAmerica.Central', 'none'][i],
+      map: ['Kavkazi', 'Europe', 'NorthAmerica', 'Kavkazi', null, 'NorthAmerica'][i],
+      experiences: [['KOTH_Standard'], ['KOTH_Infantry'], ['Conquest'], ['KOTH_Hardcore'], null, ['KOTH_Standard']][i],
+      lighting: ['Day', 'Night', 'Dawn', 'Day', null, 'Night'][i],
+      alternator: ['none', 'ZoneAlternator.Europe.North', 'ZoneAlternator.NorthAmerica.Central', 'none', null, 'ZoneAlternator.NorthAmerica.East'][i],
       scoreCap: null,
       matchSeconds: 1200,
       playerCount,
-      maxPlayers: [100, 100, 100, 100][i],
+      maxPlayers: [100, 100, 100, 100, null, 100][i],
       scores: [
-        { name: 'Lonestar', colorHex: '#2196f3', score: [4, 6, 0, 72][i] },
-        { name: 'Valkyra', colorHex: '#f44336', score: [0, 16, 0, 0][i] },
-        { name: 'Manticore', colorHex: '#4caf50', score: [35, 51, 0, 100][i] }
+        { name: 'Lonestar', colorHex: '#2196f3', score: [4, 6, 0, 72, null, 18][i] },
+        { name: 'Valkyra', colorHex: '#f44336', score: [0, 16, 0, 0, null, 22][i] },
+        { name: 'Manticore', colorHex: '#4caf50', score: [35, 51, 0, 100, null, 9][i] }
       ]
     },
     players: players(Math.min(playerCount, 10)),

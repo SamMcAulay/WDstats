@@ -1,9 +1,9 @@
 # Wardogs Discord Bots
 
-Five Discord bot accounts in one Node process. Each shows one Wardogs server's
+Six Discord bot accounts in one Node process. Each shows one Wardogs server's
 live player count, faction scores and join code as Discord sidebar presence.
 
-All five behave identically. They differ only in which server they watch and
+All six behave identically. They differ only in which server they watch and
 what `BOT{i}_NAME_TEMPLATE` calls them.
 
 ```
@@ -25,7 +25,7 @@ Design: `docs/superpowers/specs/2026-09-21-wardogs-discord-bots-design.md`
 ## Requirements
 
 - Node 20 or newer
-- A Warcon org API key with the `server.view` capability, scoped to the five
+- A Warcon org API key with the `server.view` capability, scoped to the six
   server ids (minting one requires the **owner** org role)
 - A Cloudflare Access service token, if the Warcon panel is behind Access
 
@@ -148,11 +148,11 @@ Every value comes from the environment. `.env` is gitignored — never commit it
 | `WARCON_BASE_URL` | Panel origin, e.g. `https://panel.example.com` |
 | `WARCON_TOKEN` | Warcon org API key (`server.view`) |
 | `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` | Cloudflare service token; omit both if not behind Access |
-| `BOT{1..5}_TOKEN` | Discord bot token |
-| `BOT{1..5}_SERVER_ID` | Warcon server id this bot displays |
-| `BOT{1..5}_GUILD_IDS` | Comma-separated guild ids for nickname updates |
-| `BOT{1..5}_NAME_TEMPLATE` | `{name}` for the live server name, or a literal such as `"EU#1 - TEG.gg"`. Quote any value containing `#` — unquoted, dotenv treats it as a comment and keeps only what precedes it |
-| `BOT{1..5}_JOIN_CODE` | Fallback join code for builds that do not serve `GET /v1/server-id` |
+| `BOT{1..6}_TOKEN` | Discord bot token |
+| `BOT{1..6}_SERVER_ID` | Warcon server id this bot displays |
+| `BOT{1..6}_GUILD_IDS` | Comma-separated guild ids for nickname updates |
+| `BOT{1..6}_NAME_TEMPLATE` | `{name}` for the live server name, or a literal such as `"EU#1 - TEG.gg"`. Quote any value containing `#` — unquoted, dotenv treats it as a comment and keeps only what precedes it |
+| `BOT{1..6}_JOIN_CODE` | Fallback join code for builds that do not serve `GET /v1/server-id` |
 | `POLL_INTERVAL_MS` | Default `15000` |
 | `STALE_AFTER_MS` | Default `90000` |
 | `REQUEST_TIMEOUT_MS` | Default `10000` |
@@ -200,7 +200,7 @@ dashboard; the start command is `npm start`.
 
 | Call | Budget | Usage |
 |---|---|---|
-| Warcon API | 120/min per IP | ~20/min |
+| Warcon API | 120/min per IP | ~24/min |
 | Discord presence | 5 per 20s | 1 per 15s per bot |
 | `PATCH /applications/@me` | undocumented | only when text changes |
 

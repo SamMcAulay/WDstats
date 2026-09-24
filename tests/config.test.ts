@@ -6,7 +6,7 @@ function validEnv(): NodeJS.ProcessEnv {
     WARCON_BASE_URL: 'https://panel.example.com/',
     WARCON_TOKEN: 'warcon-key'
   };
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 6; i++) {
     env[`BOT${i}_TOKEN`] = `token-${i}`;
     env[`BOT${i}_SERVER_ID`] = `server-${i}`;
     env[`BOT${i}_GUILD_IDS`] = `guild-${i}`;
@@ -15,11 +15,11 @@ function validEnv(): NodeJS.ProcessEnv {
 }
 
 describe('loadConfig', () => {
-  it('parses five bot bindings', () => {
+  it('parses six bot bindings', () => {
     const cfg = loadConfig(validEnv());
-    expect(cfg.bots).toHaveLength(5);
+    expect(cfg.bots).toHaveLength(6);
     expect(cfg.bots[0]!.serverId).toBe('server-1');
-    expect(cfg.bots[4]!.token).toBe('token-5');
+    expect(cfg.bots[5]!.token).toBe('token-6');
   });
 
   it('strips a trailing slash from the base url', () => {

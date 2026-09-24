@@ -20,7 +20,7 @@ export interface Config {
   bots: BotBinding[];
 }
 
-const BOT_COUNT = 5;
+const BOT_COUNT = 6;
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const missing: string[] = [];

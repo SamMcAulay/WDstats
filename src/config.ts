@@ -20,7 +20,8 @@ export interface Config {
   bots: BotBinding[];
 }
 
-const BOT_COUNT = 6;
+/** Bot slots BOT1..BOT6. A slot with no token, server and guilds is off. */
+const BOT_SLOTS = 6;
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const missing: string[] = [];
@@ -50,7 +51,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const warconToken = req('WARCON_TOKEN');
 
   const bots: BotBinding[] = [];
-  for (let i = 1; i <= BOT_COUNT; i++) {
+  for (let i = 1; i <= BOT_SLOTS; i++) {
+    const keys = [`BOT${i}_TOKEN`, `BOT${i}_SERVER_ID`, `BOT${i}_GUILD_IDS`];
+    if (keys.every((k) => (env[k] ?? '').trim() === '')) continue;
     const token = req(`BOT${i}_TOKEN`);
     const serverId = req(`BOT${i}_SERVER_ID`);
     const guildIds = (env[`BOT${i}_GUILD_IDS`] ?? '')
@@ -68,6 +71,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       joinCodeFallback: opt(`BOT${i}_JOIN_CODE`)
     });
   }
+
+  if (bots.length === 0) missing.push('BOT1_TOKEN, BOT1_SERVER_ID, BOT1_GUILD_IDS (no bot slot is set)');
 
   const cfAccessClientId = opt('CF_ACCESS_CLIENT_ID');
   const cfAccessClientSecret = opt('CF_ACCESS_CLIENT_SECRET');

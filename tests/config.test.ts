@@ -22,6 +22,28 @@ describe('loadConfig', () => {
     expect(cfg.bots[5]!.token).toBe('token-6');
   });
 
+  it('skips a slot left entirely blank, keeping the others\' slot numbers', () => {
+    const env = validEnv();
+    for (const i of [5, 6]) {
+      delete env[`BOT${i}_TOKEN`];
+      env[`BOT${i}_SERVER_ID`] = '';
+      env[`BOT${i}_GUILD_IDS`] = ' ';
+    }
+    const cfg = loadConfig(env);
+    expect(cfg.bots.map((b) => b.index)).toEqual([1, 2, 3, 4]);
+  });
+
+  it('rejects a half-configured slot', () => {
+    const env = validEnv();
+    delete env.BOT5_TOKEN;
+    expect(() => loadConfig(env)).toThrow(/BOT5_TOKEN/);
+  });
+
+  it('needs at least one bot slot', () => {
+    const env: NodeJS.ProcessEnv = { WARCON_BASE_URL: 'https://panel.example.com', WARCON_TOKEN: 'k' };
+    expect(() => loadConfig(env)).toThrow(/no bot slot is set/);
+  });
+
   it('strips a trailing slash from the base url', () => {
     expect(loadConfig(validEnv()).warconBaseUrl).toBe('https://panel.example.com');
   });

@@ -1,9 +1,11 @@
 # Wardogs Discord Bots
 
-Six Discord bot accounts in one Node process. Each shows one Wardogs server's
-live player count, faction scores and join code as Discord sidebar presence.
+Up to six Discord bot accounts in one Node process. Each shows one Wardogs
+server's live player count, faction scores and join code as Discord sidebar
+presence. A slot whose `BOT{i}_TOKEN`, `BOT{i}_SERVER_ID` and
+`BOT{i}_GUILD_IDS` are all blank is off; four run today (slots 1–4).
 
-All six behave identically. They differ only in which server they watch and
+All bots behave identically. They differ only in which server they watch and
 what `BOT{i}_NAME_TEMPLATE` calls them.
 
 ```
@@ -25,8 +27,8 @@ Design: `docs/superpowers/specs/2026-09-21-wardogs-discord-bots-design.md`
 ## Requirements
 
 - Node 20 or newer
-- A Warcon org API key with the `server.view` capability, scoped to the six
-  server ids (minting one requires the **owner** org role)
+- A Warcon org API key with the `server.view` capability, scoped to the
+  bots' server ids (minting one requires the **owner** org role)
 - A Cloudflare Access service token, if the Warcon panel is behind Access
 
 ## Setup
